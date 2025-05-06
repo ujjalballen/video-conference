@@ -40,7 +40,15 @@ initMediasoup(); // build our mediasoup server/sfu
 
 io.on('connection', (socket) => {
   console.log(socket.id + 'user connected')
-})
+
+  socket.on('getRtpCap', (cb) => {
+
+    // cb is a callback to run, the will send the args
+    // back to the client
+    cb(router.rtpCapabilities);
+  });
+  
+});
 
 
 httpServer.listen(config.port, () => {

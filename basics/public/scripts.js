@@ -1,4 +1,5 @@
 let socket = null;
+let device = null;
 
 const initConnect = () => {
     socket = io();
@@ -12,10 +13,26 @@ const initConnect = () => {
 };
 
 
+const deviceSetup = async() => {
+    console.log(mediasoupClient)
+
+    device = new mediasoupClient.Device();
+
+    const routerRtpCapabilities = await socket.emitWithAck('getRtpCap');
+    console.log(routerRtpCapabilities)
+    await device.load({routerRtpCapabilities })
+
+    console.log(device.loaded)
+
+};
+
+
 // socket listener here
 const addSocketListener = () => {
     socket.on('connect', () => {
         connectButton.innerHTML = 'Connected';
         deviceButton.disabled = false
     });
+
+
 };
