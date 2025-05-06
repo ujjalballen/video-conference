@@ -38,6 +38,10 @@ const initMediasoup = async () => {
 initMediasoup(); // build our mediasoup server/sfu
 
 
+io.on('connection', (socket) => {
+  console.log(socket.id + 'user connected')
+})
+
 
 httpServer.listen(config.port, () => {
   console.log(`listening on *:${config.port}`);
