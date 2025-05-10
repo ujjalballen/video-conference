@@ -49,14 +49,41 @@ const createProducer = async () => {
 
         localVideo.srcObject = localStream;
 
-        //ask the socket server(signaling) for transport information
-        const data = await socket.emitWithAck('create-producer-transport');
-        console.log(data);
-
+        // //ask the socket server(signaling) for transport information
+        // const data = await socket.emitWithAck('create-producer-transport');
+        // console.log(data);
 
     } catch (error) {
         console.log(error)
-    }
+    };
+
+    //ask the socket server(signaling) for transport information
+    const data = await socket.emitWithAck('create-producer-transport');
+    const { id, iceParameters, iceCandidates, dtlsParameters } = data;
+    // console.log(data);
+
+    // make a transport on the client(producer)
+    const transport = device.createSendTransport({
+        id,
+        iceParameters,
+        iceCandidates,
+        dtlsParameters
+    });
+
+    producerTransport = transport; // we can do it into oneline
+
+    // the transport connect event will not fired untill,
+    // we call transport.produce()
+    producerTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
+        console.log('transport connect even has fired')
+    });
+
+    producerTransport.on('produce', async(parameters, callback, errback) => {
+        console.log('transport produce even has fired')
+
+    });
+
+
 
 };
 
