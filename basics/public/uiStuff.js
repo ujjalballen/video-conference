@@ -6,6 +6,7 @@ const publishButton = document.getElementById('publish')
 const createConsButton = document.getElementById('create-consumer')
 const consumeButton = document.getElementById('consume')
 const disconnectButton = document.getElementById('disconnect')
+
 // other elements
 const localVideo = document.getElementById('local-video')
 const remoteVideo = document.getElementById('remote-video')

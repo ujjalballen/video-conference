@@ -39,15 +39,49 @@ initMediasoup(); // build our mediasoup server/sfu
 
 
 io.on('connection', (socket) => {
-  console.log(socket.id + 'user connected')
+  console.log(socket.id + 'user connected');
+  let thisClientProducerTransport = null;
 
-  socket.on('getRtpCap', (cb) => {
+  socket.on('getRtpCap', (ack) => {
 
-    // cb is a callback to run, the will send the args
+    // ack is a callback to run, the will send the args
     // back to the client
-    cb(router.rtpCapabilities);
+    ack(router.rtpCapabilities);
   });
-  
+
+
+  socket.on('create-producer-transport', async (ack) => {
+    // create a transport! A producer transport
+    thisClientProducerTransport = await router.createWebRtcTransport({
+      enableUdp: true,
+      enableTcp: true, // always used UDP unless we can't
+      preferUdp: true,
+      listenInfos: [
+        {
+          protocol: 'udp',
+          ip: '127.0.0.1'  // "192.168.0.111"
+        },
+        {
+          protocol: 'tcp',
+          ip: '127.0.0.1'  // "192.168.0.111"
+        }
+      ]
+    });
+
+    console.log(thisClientProducerTransport)
+
+    // we could distructer from the thisClientProducerTransport
+    // but we store them into the varibale
+    const clientTrasportParams = {
+      id: thisClientProducerTransport.id,
+      iceParameters: thisClientProducerTransport.iceParameters,
+      iceCandidates: thisClientProducerTransport.iceCandidates,
+      dtlsParameters: thisClientProducerTransport.dtlsParameters
+    };
+
+    ack(clientTrasportParams); // what we send back to the client
+  });
+
 });
 
 
