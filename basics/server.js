@@ -41,6 +41,7 @@ initMediasoup(); // build our mediasoup server/sfu
 io.on('connection', (socket) => {
   console.log(socket.id + 'user connected');
   let thisClientProducerTransport = null;
+  let thisClientProducer = null;
 
   socket.on('getRtpCap', (ack) => {
 
@@ -48,6 +49,7 @@ io.on('connection', (socket) => {
     // back to the client
     ack(router.rtpCapabilities);
   });
+
 
 
   socket.on('create-producer-transport', async (ack) => {
@@ -81,6 +83,38 @@ io.on('connection', (socket) => {
 
     ack(clientTrasportParams); // what we send back to the client
   });
+
+
+
+  socket.on('connect-transport', async (dtlsParameters, ack) => {
+    // get dtls info from the client and finish the connection
+    // on success, send success, faild the error/faild
+    try {
+      await thisClientProducerTransport.connect(dtlsParameters); // from client it pass using object
+
+      ack('success');
+
+    } catch (error) {
+      // something is wrong then send back and log;
+      console.log(error);
+      ack('error');
+    }
+
+  });
+
+
+  socket.on('start-producing', async ({ kind, rtpParameters }, ack) => {
+    try {
+      thisClientProducer = await thisClientProducerTransport.produce({ kind, rtpParameters })
+
+      ack(thisClientProducer.id);
+
+    } catch (error) {
+      console.log(error);
+      ack('error');
+    }
+  });
+
 
 });
 

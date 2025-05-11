@@ -3,6 +3,8 @@ let socket = null;
 let device = null;
 let localStream = null;
 let producerTransport = null;
+let producer = null;
+
 
 
 const initConnect = () => {
@@ -75,15 +77,64 @@ const createProducer = async () => {
     // the transport connect event will not fired untill,
     // we call transport.produce()
     producerTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
-        console.log('transport connect even has fired')
+        // console.log('transport connect even has fired')
+        // connect comes with local dtlsParameters. we need to send those up to server,
+        // so we can finished the connection
+
+        console.log(dtlsParameters)
+        const response = await socket.emitWithAck('connect-transport', { dtlsParameters });
+        console.log(response)
+
+        if (response === 'success') {
+            // calling callback simply let the app know, the server succeed
+            // in connecting, so trigger the produce event
+            callback();
+        } else if (response === 'error') {
+            // calling errback simply let the app know, the server faild/error
+            // in connecting, so HALT everything
+            errback();
+        }
+
     });
 
-    producerTransport.on('produce', async(parameters, callback, errback) => {
+    producerTransport.on('produce', async (parameters, callback, errback) => {
         console.log('transport produce even has fired')
+        console.log(parameters)
+
+        const { kind, rtpParameters } = parameters;
+
+        const response = await socket.emitWithAck('start-producing', { kind, rtpParameters });
+        // console.log(response)
+        if(response === 'error'){
+            //somehing is wrong when the server tried to produce
+            errback();
+        }else{
+            // response contains a id;
+            callback({id: response});
+        };
+
+        publishButton.disabled = true;
+        createConsButton.dispatchEvent = false;
 
     });
 
 
+    createProdButton.disabled = true;
+    publishButton.disabled = false;
+
+};
+
+
+// publish feed logic will be here
+const publish = async () => {
+    // console.log('hello')
+
+    const videoTrack = localStream.getVideoTracks()[0];
+    producer = await producerTransport.produce({
+        track: videoTrack
+    });
+
+    console.log(videoTrack)
 
 };
 
