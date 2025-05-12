@@ -5,6 +5,7 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const config = require('./config/config');
 const createWorkers = require('./createWorkers');
+const createWebRtcTransportBothKind = require('./createWebRtcTransportBothKind');
 
 app.use(express.static('public'));
 
@@ -42,6 +43,9 @@ io.on('connection', (socket) => {
   console.log(socket.id + 'user connected');
   let thisClientProducerTransport = null;
   let thisClientProducer = null;
+  let thisClientConsumerTransport = null;
+  let thisClientConsumer = null;
+
 
   socket.on('getRtpCap', (ack) => {
 
@@ -54,33 +58,35 @@ io.on('connection', (socket) => {
 
   socket.on('create-producer-transport', async (ack) => {
     // create a transport! A producer transport
-    thisClientProducerTransport = await router.createWebRtcTransport({
-      enableUdp: true,
-      enableTcp: true, // always used UDP unless we can't
-      preferUdp: true,
-      listenInfos: [
-        {
-          protocol: 'udp',
-          ip: '127.0.0.1'  // "192.168.0.111"
-        },
-        {
-          protocol: 'tcp',
-          ip: '127.0.0.1'  // "192.168.0.111"
-        }
-      ]
-    });
+    /*     thisClientProducerTransport = await router.createWebRtcTransport({
+          enableUdp: true,
+          enableTcp: true, // always used UDP unless we can't
+          preferUdp: true,
+          listenInfos: [
+            {
+              protocol: 'udp',
+              ip: '127.0.0.1'  // "192.168.0.111"
+            },
+            {
+              protocol: 'tcp',
+              ip: '127.0.0.1'  // "192.168.0.111"
+            }
+          ]
+        });
+    
+        // console.log(thisClientProducerTransport)
+    
+        // we could distructer from the thisClientProducerTransport
+        // but we store them into the varibale
+        const clientTrasportParams = {
+          id: thisClientProducerTransport.id,
+          iceParameters: thisClientProducerTransport.iceParameters,
+          iceCandidates: thisClientProducerTransport.iceCandidates,
+          dtlsParameters: thisClientProducerTransport.dtlsParameters
+        }; */
 
-    console.log(thisClientProducerTransport)
-
-    // we could distructer from the thisClientProducerTransport
-    // but we store them into the varibale
-    const clientTrasportParams = {
-      id: thisClientProducerTransport.id,
-      iceParameters: thisClientProducerTransport.iceParameters,
-      iceCandidates: thisClientProducerTransport.iceCandidates,
-      dtlsParameters: thisClientProducerTransport.dtlsParameters
-    };
-
+    const { transport, clientTrasportParams } = await createWebRtcTransportBothKind(router);
+    thisClientProducerTransport = transport; // store in thisClientProducerTransport variable
     ack(clientTrasportParams); // what we send back to the client
   });
 
@@ -114,6 +120,34 @@ io.on('connection', (socket) => {
       ack('error');
     }
   });
+
+
+
+  socket.on('create-consumer-transport', async (ack) => {
+    const { transport, clientTrasportParams } = await createWebRtcTransportBothKind(router);
+    thisClientConsumerTransport = transport;
+    ack(clientTrasportParams);
+  });
+
+
+
+  socket.on('connect-consumer-transport', async (dtlsParameters, ack) => {
+    // get dtls info from the client and finish the connection
+    // on success, send success, faild the error/faild
+    try {
+      await thisClientConsumerTransport.connect(dtlsParameters); // from client it pass using object
+
+      ack('success');
+
+    } catch (error) {
+      // something is wrong then send back and log;
+      console.log(error);
+      ack('error');
+    }
+
+  });
+
+
 
 
 });

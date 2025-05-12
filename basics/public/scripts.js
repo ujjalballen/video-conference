@@ -4,6 +4,8 @@ let device = null;
 let localStream = null;
 let producerTransport = null;
 let producer = null;
+let consumerTransport = null;
+let consumer = null;
 
 
 
@@ -97,6 +99,8 @@ const createProducer = async () => {
 
     });
 
+
+
     producerTransport.on('produce', async (parameters, callback, errback) => {
         console.log('transport produce even has fired')
         console.log(parameters)
@@ -105,16 +109,16 @@ const createProducer = async () => {
 
         const response = await socket.emitWithAck('start-producing', { kind, rtpParameters });
         // console.log(response)
-        if(response === 'error'){
+        if (response === 'error') {
             //somehing is wrong when the server tried to produce
             errback();
-        }else{
+        } else {
             // response contains a id;
-            callback({id: response});
+            callback({ id: response });
         };
 
         publishButton.disabled = true;
-        createConsButton.dispatchEvent = false;
+        createConsButton.disabled = false;
 
     });
 
@@ -135,6 +139,48 @@ const publish = async () => {
     });
 
     console.log(videoTrack)
+
+};
+
+
+// create Consume transport logic is here
+const createConsumer = async () => {
+    const data = await socket.emitWithAck('create-consumer-transport');
+    const { id, iceParameters, iceCandidates, dtlsParameters } = data;
+    console.log(data);
+
+    const transport = device.createRecvTransport({
+        id,
+        iceParameters,
+        iceCandidates,
+        dtlsParameters
+    });
+
+    consumerTransport = transport;
+
+
+    consumerTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
+        // connect comes with local dtlsParameters. we need to send those up to server,
+        // so we can finished the connection
+
+        const response = await socket.emitWithAck('connect-consumer-transport', { dtlsParameters });
+        console.log(response)
+
+        if (response === 'success') {
+            // calling callback simply let the app know, the server succeed
+            // in connecting, so trigger the produce event
+            callback();
+        } else if (response === 'error') {
+            // calling errback simply let the app know, the server faild/error
+            // in connecting, so HALT everything
+            errback();
+        }
+
+    });
+
+    createConsButton.disabled = true;
+    consumeButton.disabled = false;
+
 
 };
 
