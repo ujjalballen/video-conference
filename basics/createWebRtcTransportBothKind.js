@@ -6,11 +6,13 @@ const createWebRtcTransportBothKind = async (router) => {
         listenInfos: [
             {
                 protocol: 'udp',
-                ip: '127.0.0.1'  // "192.168.0.111"
+                ip: '127.0.0.1'  // "192.168.0.111" or 0.0.0.0
+                // announcedAddress : 'site address'
             },
             {
                 protocol: 'tcp',
-                ip: '127.0.0.1'  // "192.168.0.111"
+                ip: '127.0.0.1'  // "192.168.0.111" or 0.0.0.0
+                 // announcedAddress : 'site address'
             }
         ]
     });

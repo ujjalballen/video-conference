@@ -22,9 +22,10 @@ const io = new Server(httpServer, {
 // our global
 // init workers, it's where our mediasoup workers will live
 let workers = null;
-
 //init router, its where only 1 router will live
 let router = null;
+// theProducer will be a global, and whoever produced last
+let theProducer = null;
 
 const initMediasoup = async () => {
   workers = await createWorkers(); // function call
@@ -112,6 +113,14 @@ io.on('connection', (socket) => {
   socket.on('start-producing', async ({ kind, rtpParameters }, ack) => {
     try {
       thisClientProducer = await thisClientProducerTransport.produce({ kind, rtpParameters })
+      theProducer = thisClientProducer;
+
+      
+      thisClientProducer.on("transportclose", () => {
+        console.log("Producer transport closed ");
+        thisClientProducer.close();
+      });
+
 
       ack(thisClientProducer.id);
 
@@ -153,23 +162,28 @@ io.on('connection', (socket) => {
     // we will setup our clientConsumer and send back,
     // params the client needs to the same
     // make sure there is a producer(we can't consume without one);
-
-    if (!thisClientProducer) {
+    // if (!thisClientProducer)
+    if (!theProducer) {
       ack('noProducer');
-    } else if (!router.canConsume({ producerId: thisClientProducer.id, rtpCapabilities })) {
+    } else if (!router.canConsume({ producerId: theProducer.id, rtpCapabilities })) {
       ack('canNotConsume')
     } else {
       // we can consume... there is a producer and client is able.
       //proceed!
 
       thisClientConsumer = await thisClientConsumerTransport.consume({
-        producerId: thisClientProducer.id,
+        producerId: theProducer.id, //thisClientProducer
         rtpCapabilities,
         paused: true // see doc, it's a usually best way to start
       });
 
+      thisClientConsumer.on("transportclose", () => {
+        console.log("consumer transport closed ");
+        thisClientConsumer.close();
+      });
+
       const consumerParams = {
-        producerId: thisClientProducer.id,
+        producerId: theProducer.id, ///thisClientProducer
         id: thisClientConsumer.id,
         kind: thisClientConsumer.kind,
         rtpParameters: thisClientConsumer.rtpParameters
@@ -180,11 +194,24 @@ io.on('connection', (socket) => {
   });
 
 
-  socket.on('unpauseConsumer', async(ack) => {
+  socket.on('unpauseConsumer', async (ack) => {
     await thisClientConsumer.resume();
   });
 
-  
+
+
+  socket.on('close-all', (ack) => {
+    // client has requested to closed all;
+    try {
+      thisClientConsumerTransport?.close();
+      thisClientProducerTransport?.close();
+      ack('closed')
+    } catch (error) {
+      ack('closeError')
+    }
+  });
+
+
 
 });
 

@@ -35,6 +35,8 @@ const deviceSetup = async () => {
     // console.log(device.loaded)
     deviceButton.disabled = true;
     createProdButton.disabled = false;
+    createConsButton.disabled = false;
+    disconnectButton.disabled = false;
 
 
 };
@@ -211,6 +213,22 @@ const consume = async () => {
         await socket.emitWithAck('unpauseConsumer');
     };
 
+};
+
+
+
+const disconnect = async () => {
+    // we want to close everything, right now!
+    // send a message to the server, then closed here
+    console.log('disconnect')
+    const closedResp = await socket.emitWithAck('close-all');
+    if (closedResp === 'closeError') {
+        console.log('Somethings happend with the server!')
+    }
+
+    // it doesn't matter if the server didn't close, we are closed now!
+    producerTransport?.close();
+    consumerTransport?.close();
 };
 
 
