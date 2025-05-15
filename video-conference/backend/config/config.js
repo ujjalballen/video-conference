@@ -1,5 +1,5 @@
 const config = {
-    port: 3030,
+    port: 3031,
     workerSettings: {
 
         // rtcMinPort and rtcMaxPort are just arbitray port for our traffics

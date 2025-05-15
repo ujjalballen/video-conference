@@ -1,6 +1,12 @@
 import './style.css'
 import button from '../uiStuff/uiButtons';
+import { Device, Transport } from 'mediasoup-client';
+import { io } from "socket.io-client";
 
+const socket = io('http://localhost:3031'); // server URL
+socket.on('connect', () => {
+  console.log('socket connected!')
+});
 
 const joinRoom = () => {
   const userName = document.getElementById('username').value;
