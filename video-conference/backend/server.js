@@ -50,11 +50,10 @@ io.on('connection', (socket) => {
 
   const handshake = socket.handshake // socket.handshake is where auth and query lives;
   // you could now check handshake for password, auth, etc;
-  socket.on('joinRoom', async ({ userName, roomName }, ack) => {
-    // client = new Client();
-    console.log({userName, roomName});
+  socket.on('joinRoom', async ({ userName, roomName, router }, ack) => {
+    client = new Client(userName, socket, router);
 
-    ack('got it')
+
   });
 
 });
