@@ -6,18 +6,20 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const config = require('./config/config');
 const createWorkers = require('./createWorkers');
+const Client = require('./classes/Client');
+const Room = require('./classes/Room');
 
 app.use(express.json());
 app.use(cors());
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-    cors: {
-        origin: `http://localhost:5173`,
-        // methods: ["GET", "POST"],
-        // allowedHeaders: ["my-custom-header"],
-        // credentials: true
-    }
+  cors: {
+    origin: `http://localhost:5173`,
+    // methods: ["GET", "POST"],
+    // allowedHeaders: ["my-custom-header"],
+    // credentials: true
+  }
 });
 
 
@@ -42,6 +44,18 @@ initMediasoup(); // build our mediasoup server/sfu
 
 
 io.on('connection', (socket) => {
+  // this is where this user/client/socket lives!
+
+  let client; // this client object available to all our socket listeners
+
+  const handshake = socket.handshake // socket.handshake is where auth and query lives;
+  // you could now check handshake for password, auth, etc;
+  socket.on('joinRoom', async ({ userName, roomName }, ack) => {
+    // client = new Client();
+    console.log({userName, roomName});
+
+    ack('got it')
+  });
 
 });
 
