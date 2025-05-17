@@ -5,9 +5,10 @@ const mediasoup = require('mediasoup');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const config = require('./config/config');
-const createWorkers = require('./createWorkers');
+const createWorkers = require('./utilities/createWorkers');
 const Client = require('./classes/Client');
 const Room = require('./classes/Room');
+const getWorker = require('./utilities/getWorker');
 
 app.use(express.json());
 app.use(cors());
@@ -26,18 +27,17 @@ const io = new Server(httpServer, {
 // our global
 // init workers, it's where our mediasoup workers will live
 let workers = null;
-//init router, its where only 1 router will live
-let router = null;
 
+// router is now managed by the Room Object
+
+// master rooms array that contains all our Room Object
+const rooms = [];
 
 const initMediasoup = async () => {
   workers = await createWorkers(); // function call
   // console.log(workers)
 
-  // we just take only one workers ==> we can run a forEach loop for all workers
-  router = await workers[0].createRouter({
-    mediaCodecs: config.routerMediaCodecs
-  })
+
 };
 
 initMediasoup(); // build our mediasoup server/sfu
@@ -50,9 +50,16 @@ io.on('connection', (socket) => {
 
   const handshake = socket.handshake // socket.handshake is where auth and query lives;
   // you could now check handshake for password, auth, etc;
-  socket.on('joinRoom', async ({ userName, roomName, router }, ack) => {
+  socket.on('joinRoom', async ({ userName, roomName, router }, ackCb) => {
     client = new Client(userName, socket, router);
 
+    let requestedRoom = rooms.find(room => room.roomName === roomName);
+    if (!requestedRoom) {
+      //make the new room, add a worker, add a router
+      const workerToUse = await getWorker(workers);
+      requestedRoom = new Room(roomName, workerToUse);
+      await requestedRoom.createRouter()
+    }
 
   });
 

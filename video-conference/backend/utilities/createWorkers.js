@@ -3,7 +3,7 @@ const mediasoup = require('mediasoup');
 const totalThreads = os.cpus().length; // get the number of CPU cores available on the system
 // maximum number of allowed workers
 // console.log(`Total Threads: ${totalThreads}`); // log the number of CPU cores
-const config = require('./config/config');
+const config = require('../config/config');
 
 const createWorkers = async () => {
     let workers = [];
