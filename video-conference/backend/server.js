@@ -51,17 +51,38 @@ io.on('connection', (socket) => {
   const handshake = socket.handshake // socket.handshake is where auth and query lives;
   // you could now check handshake for password, auth, etc;
   socket.on('joinRoom', async ({ userName, roomName, router }, ackCb) => {
-    client = new Client(userName, socket, router);
+    let newRoom = false;
+    client = new Client(userName, socket);
 
     let requestedRoom = rooms.find(room => room.roomName === roomName);
     if (!requestedRoom) {
+      newRoom = true;
       //make the new room, add a worker, add a router
       const workerToUse = await getWorker(workers);
       requestedRoom = new Room(roomName, workerToUse);
-      await requestedRoom.createRouter()
-    }
+      await requestedRoom.createRouter();
+      rooms.push(requestedRoom);
+    };
+
+    // add the room to the client
+    client.room = requestedRoom;
+
+    // add the client to the room clients
+    client.room.addClient(client);
+
+    // add this socket to the socket room
+
+    socket.join(client.room.roomName);
+
+
+    // PLACEHOLDER.. Eventually, we will need to get all current producers... come back to this!
+    ackCb({
+      routerRtpCapabilities: client.room.router.rtpCapabilities,
+      newRoom
+    });
 
   });
+
 
 });
 

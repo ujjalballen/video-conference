@@ -1,5 +1,5 @@
 class Client {
-    constructor(userName, socket, router) {
+    constructor(userName, socket) {
         this.userName = userName
         this.socket = socket
 
@@ -15,10 +15,8 @@ class Client {
 
         // an array of consumer, each of two parts
         this.consumer = []
-        this.router = router
 
         // this.room = []
-
         this.room = null // it will be a room object
     };
 };
