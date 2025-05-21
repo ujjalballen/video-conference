@@ -2,9 +2,11 @@ import './style.css'
 import { Device, Transport } from 'mediasoup-client';
 import { io } from "socket.io-client";
 import buttons from '../uiStuff/uiButtons';
+import createProducerTransport from '../mediaSoupFunctions/createProducerTransport';
 
 let device = null;
 let localStream = null;
+let producerTransport = null;
 
 const socket = io('http://localhost:3031'); // server URL
 socket.on('connect', () => {
@@ -30,6 +32,7 @@ const joinRoom = async () => {
 };
 
 
+// enableFeed logic
 
 const enableFeed = async () => {
   localStream = await navigator.mediaDevices.getUserMedia({
@@ -45,5 +48,16 @@ const enableFeed = async () => {
   buttons.muteBtn.disabled = false;
 };
 
+
+// sendFeed logic
+
+const sendFeed = async () => {
+  // create a trasport for THIS cliet's upstream
+  // it will hand both audio and video producer
+producerTransport = await createProducerTransport(socket);
+};
+
+
 buttons.joinRoom.addEventListener('click', joinRoom);
-buttons.enableFeed.addEventListener('click', enableFeed)
+buttons.enableFeed.addEventListener('click', enableFeed);
+buttons.sendFeed.addEventListener('click', sendFeed);
