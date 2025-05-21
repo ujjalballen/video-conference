@@ -1,15 +1,17 @@
 import './style.css'
-import button from '../uiStuff/uiButtons';
 import { Device, Transport } from 'mediasoup-client';
 import { io } from "socket.io-client";
-import uiButtons from '../uiStuff/uiButtons';
+import buttons from '../uiStuff/uiButtons';
 
 let device = null;
+let localStream = null;
 
 const socket = io('http://localhost:3031'); // server URL
 socket.on('connect', () => {
   console.log('socket connected!')
 });
+
+// joinRoom Logic
 
 const joinRoom = async () => {
   const userName = document.getElementById('username').value;
@@ -24,7 +26,24 @@ const joinRoom = async () => {
   console.log(device)
 
   // PLACEHOLDER... Start making the transports for current speakers
-  uiButtons.control.classList.remove('d-none');
+  buttons.control.classList.remove('d-none');
 };
 
-button.joinRoom.addEventListener('click', joinRoom);
+
+
+const enableFeed = async () => {
+  localStream = await navigator.mediaDevices.getUserMedia({
+    audio: true,
+    video: true
+  });
+
+  buttons.localMediaLeft.srcObject = localStream;
+
+  // button disabled and endabled
+  buttons.enableFeed.disabled = true;
+  buttons.sendFeed.disabled = false;
+  buttons.muteBtn.disabled = false;
+};
+
+buttons.joinRoom.addEventListener('click', joinRoom);
+buttons.enableFeed.addEventListener('click', enableFeed)

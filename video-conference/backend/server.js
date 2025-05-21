@@ -62,10 +62,12 @@ io.on('connection', (socket) => {
       requestedRoom = new Room(roomName, workerToUse);
       await requestedRoom.createRouter();
       rooms.push(requestedRoom);
+      // console.log('Requested Room: ', requestedRoom)
     };
 
     // add the room to the client
     client.room = requestedRoom;
+    // console.log('adc: ', client )
 
     // add the client to the room clients
     client.room.addClient(client);
