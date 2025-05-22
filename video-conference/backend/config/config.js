@@ -45,6 +45,28 @@ const config = {
         }
     ],
 
+    webRtcTransport: {
+        listenIps: [
+            {
+                protocol: 'udp',
+                ip: '127.0.0.1'  // "192.168.0.111" or 0.0.0.0
+                // announcedAddress : 'site address'
+            },
+            {
+                protocol: 'tcp',
+                ip: '127.0.0.1'  // "192.168.0.111" or 0.0.0.0
+                // announcedAddress : 'site address'
+            }
+        ],
+
+        //For a typical video stream with HD quality, you might set maxIncoingbitrate
+        // around 5 Mbps(5000 kbps) to balance quality and bandwidth
+        // 4k Ultra HD: 15 Mbps to 25 Mbps
+        maxIncomingBitrate: 5000000, // 5 Mbps, default is INF
+        initialAvailableOutgoingBitrate: 5000000 // 5Mbps, default is 6000000
+
+    },
+
 
 
 };

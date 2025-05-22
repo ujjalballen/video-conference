@@ -86,6 +86,24 @@ io.on('connection', (socket) => {
   });
 
 
+
+
+  socket.on('requestTransport', async ({ type }, ackCb) => {
+
+    // weather producer or comsumer, client need params
+    let clientTransportParams;
+
+    if(type === "producer"){
+      // run addClient, which is part of our Client class;
+      clientTransportParams = await client.addTransport(type);
+
+    }else if(type === "consumer"){
+
+    }
+    ackCb(clientTransportParams)
+  });
+
+
 });
 
 
