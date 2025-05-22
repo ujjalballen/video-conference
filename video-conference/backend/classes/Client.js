@@ -55,15 +55,15 @@ class Client {
             };
 
 
-            if(type === "producer"){
+            if (type === "producer") {
                 // set the nre transport to the client's upstreamTransport
                 this.upstreamTrasport = transport
-            }else if(type === "consumer"){
+            } else if (type === "consumer") {
                 // this.downstreamTrasports = transport;
             }
 
 
-            resove({clientTrasportParams});
+            resove(clientTrasportParams);
         });
     };
 };

@@ -3,6 +3,8 @@ import { Device, Transport } from 'mediasoup-client';
 import { io } from "socket.io-client";
 import buttons from '../uiStuff/uiButtons';
 import createProducerTransport from '../mediaSoupFunctions/createProducerTransport';
+import createProducer from '../mediaSoupFunctions/createProducer';
+
 
 let device = null;
 let localStream = null;
@@ -54,7 +56,12 @@ const enableFeed = async () => {
 const sendFeed = async () => {
   // create a trasport for THIS cliet's upstream
   // it will hand both audio and video producer
-producerTransport = await createProducerTransport(socket);
+  producerTransport = await createProducerTransport(socket, device);
+  // console.log('Have producer transport, Time to produce')
+
+  // create our producers
+  const producers = await createProducer(localStream, producerTransport)
+
 };
 
 
