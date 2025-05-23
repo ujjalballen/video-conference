@@ -93,14 +93,49 @@ io.on('connection', (socket) => {
     // weather producer or comsumer, client need params
     let clientTransportParams;
 
-    if(type === "producer"){
+    if (type === "producer") {
       // run addClient, which is part of our Client class;
       clientTransportParams = await client.addTransport(type);
 
-    }else if(type === "consumer"){
+    } else if (type === "consumer") {
 
     }
     ackCb(clientTransportParams)
+  });
+
+
+
+  socket.on('connectTransport', async ({ dtlsParameters, type }, ackCb) => {
+    if (type === "producer") {
+      try {
+        await client.upstreamTrasport.connect({ dtlsParameters });
+        ackCb('success')
+
+      } catch (error) {
+        console.log(error)
+        ackCb('error')
+      }
+    } else if (type === "consumer") {
+
+    }
+  });
+
+
+
+  socket.on('startProducing', async ({ kind, rtpParameters }, ackCb) => {
+    /// creae a producer with the rtpParameters we were send
+    try {
+      const newProducer = await client.upstreamTrasport.produce({ kind, rtpParameters });
+      // the front end is waiting for the id
+      ackCb(newProducer.id);
+
+    } catch (error) {
+      console.log(error)
+      ackCb('error')
+    }
+
+    // PLACEHOLDER 1 - if this is an audiotrack, then this is a new possible speaker 
+    // PLACEHOLDER 1 - if the room populated, then let the connected peers know someone joined
   });
 
 

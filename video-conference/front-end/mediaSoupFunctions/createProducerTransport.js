@@ -10,16 +10,40 @@ const createProducerTransport = (socket, device) => {
         const producerTransport = device.createSendTransport(producerTransportParams);
         // console.log(producerTransport)
 
-        // the transport connect event will not fired untill,
-        // we call transport.produce()
-        producerTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
-            // emit producerTransport 
 
-            console.log('connect running produce...')
+        producerTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
+            // the transport connect event will not fired untill,
+            // we call transport.produce();
+            // dtlsParams are created by the broser so we can finish the other half of the connection
+            // emit connectTransport 
+
+            console.log('connect running produce...');
+
+            const connectResp = await socket.emitWithAck('connectTransport', { dtlsParameters, type: "producer" })
+            console.log(connectResp + 'connectResp is back')
+            if (connectResp == "success") {
+                // we are connected! move forward
+                callback();
+            } else if (connectResp === "error") {
+                // connection faild, stopped!
+                errback();
+            }
         });
 
         producerTransport.on('produce', async (parameters, callback, errback) => {
             // emit startProducing 
+            console.log('now producerTrasport on "produce" is running!')
+
+            const { kind, rtpParameters } = parameters;
+            const produceResp = await socket.emitWithAck('startProducing', { kind, rtpParameters });
+            console.log(produceResp + ' produce produceResp is Back')
+
+            if (produceResp === "error") {
+                errback();
+            } else {
+                // only other option to the producer id
+                callback({ id: produceResp.id });
+            }
         });
 
 
