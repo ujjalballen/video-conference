@@ -60,7 +60,7 @@ io.on('connection', (socket) => {
       //make the new room, add a worker, add a router
       const workerToUse = await getWorker(workers);
       requestedRoom = new Room(roomName, workerToUse);
-      await requestedRoom.createRouter();
+      await requestedRoom.createRouter(io);
       rooms.push(requestedRoom);
       // console.log('Requested Room: ', requestedRoom)
     };
@@ -126,6 +126,9 @@ io.on('connection', (socket) => {
     /// creae a producer with the rtpParameters we were send
     try {
       const newProducer = await client.upstreamTrasport.produce({ kind, rtpParameters });
+      // add the producer to this client object
+      client.addProducer(kind, newProducer)
+
       // the front end is waiting for the id
       ackCb(newProducer.id);
 
