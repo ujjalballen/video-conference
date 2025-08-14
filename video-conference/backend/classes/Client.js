@@ -57,7 +57,25 @@ class Client {
 
             if (type === "producer") {
                 // set the nre transport to the client's upstreamTransport
-                this.upstreamTrasport = transport
+                this.upstreamTrasport = transport;
+
+                //Testing Connection With getStats
+                setInterval(async () => {
+                    const stats = await this.upstreamTrasport.getStats();
+
+                    for (const report of stats.values()) {
+                        console.log(report.type)
+
+                        if (report.type === 'webrtc-transport') {
+                            // console.log(report)
+
+                            console.log(report.bytesReceived, "...", report.rtpBytesReceived);
+
+                        }
+                    };
+
+                }, 1000)
+
             } else if (type === "consumer") {
                 // this.downstreamTrasports = transport;
             }

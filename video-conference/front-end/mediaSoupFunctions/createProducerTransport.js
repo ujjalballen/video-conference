@@ -46,6 +46,23 @@ const createProducerTransport = (socket, device) => {
             }
         });
 
+        //Testing Connection With getStats
+        
+        // setInterval(async() => {
+        //     const stats = await producerTransport.getStats();
+
+        //     for(const report of stats.values()){
+        //         // console.log("Report", report)
+
+        //         if(report.type === 'outbound-rtp'){
+        //             console.log(report.bytesSent, "...", report.packetsSent);
+
+        //         }
+        //     };
+
+        // }, 1000)
+
+
 
         //send to the transport back to the main.js;
 
