@@ -78,9 +78,31 @@ io.on('connection', (socket) => {
 
 
     // PLACEHOLDER.. Eventually, we will need to get all current producers... come back to this!
+
+    //fetch the first 0-5 activeSpeakerList
+    const audioPidsToCreate = client.room.activeSpeakerList.slice(0, 5);
+
+    //find the videoPids and make an array with matching indicies for our audioPids
+    const videoPidsToCreate = audioPidsToCreate.map(aid => {
+      const client = client.room.clients.find(c => c?.producer?.audio?.id === aid);
+      return client?.produce?.video?.id;
+    });
+
+    //find userName and make an array with matching indicies for our audioPids/videoPids
+    const associatedUserNames = audioPidsToCreate.map(aid => {
+      const client = client.room.clients.find(c=> c?.produce?.audio?.id ===aid);
+      return client?.userName;
+    })
+
+
+
+
     ackCb({
       routerRtpCapabilities: client.room.router.rtpCapabilities,
-      newRoom
+      newRoom,
+      audioPidsToCreate,
+      videoPidsToCreate,
+      associatedUserNames
     });
 
   });

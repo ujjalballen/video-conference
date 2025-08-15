@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import buttons from '../uiStuff/uiButtons';
 import createProducerTransport from '../mediaSoupFunctions/createProducerTransport';
 import createProducer from '../mediaSoupFunctions/createProducer';
+import requestTransportToConsumre from '../mediaSoupFunctions/requestTransportToConsume';
 
 
 let device = null;
@@ -32,6 +33,17 @@ const joinRoom = async () => {
   console.log('all devices', device)
 
   // PLACEHOLDER... Start making the transports for current speakers
+
+  // joinRoomResp contains for:
+    // audioPidsToCreate
+    // map to videoPidsToCreate
+    // map to associatedUserNames
+  // these array, maybe empty....they may have max of 5 indicies
+  requestTransportToConsumre(joinRoomResp, socket, device);
+
+
+
+
   buttons.control.classList.remove('d-none');
 };
 
