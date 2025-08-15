@@ -54,6 +54,7 @@ io.on('connection', (socket) => {
     let newRoom = false;
     client = new Client(userName, socket);
 
+
     let requestedRoom = rooms.find(room => room.roomName === roomName);
     if (!requestedRoom) {
       newRoom = true;
@@ -84,14 +85,15 @@ io.on('connection', (socket) => {
 
     //find the videoPids and make an array with matching indicies for our audioPids
     const videoPidsToCreate = audioPidsToCreate.map(aid => {
-      const client = client.room.clients.find(c => c?.producer?.audio?.id === aid);
-      return client?.produce?.video?.id;
+      const producingclient = client.room.clients.find(c => c?.producer?.audio?.id === aid);
+      return producingclient?.producer?.video?.id;
     });
 
     //find userName and make an array with matching indicies for our audioPids/videoPids
     const associatedUserNames = audioPidsToCreate.map(aid => {
-      const client = client.room.clients.find(c=> c?.produce?.audio?.id ===aid);
-      return client?.userName;
+      const producingclient = client.room.clients.find(c => c?.producer?.audio?.id === aid);
+      // console.log(producingclient)
+      return producingclient?.userName;
     })
 
 
@@ -110,7 +112,7 @@ io.on('connection', (socket) => {
 
 
 
-  socket.on('requestTransport', async ({ type }, ackCb) => {
+  socket.on('requestTransport', async ({ type, audioPid }, ackCb) => {
 
     // weather producer or comsumer, client need params
     let clientTransportParams;
@@ -120,7 +122,13 @@ io.on('connection', (socket) => {
       clientTransportParams = await client.addTransport(type);
 
     } else if (type === "consumer") {
+      // we have 1 transport per client we are streaming from
+      // each transport will have an audio and a video producer/consumer
+      // we know the audio pid(because it came from dominantspeaker), get the video;
+      const producingClient = client.room.clients.find(c => c?.producer?.audio?.id === audioPid)
+      const videoPid = producingClient?.producer?.video?.id;
 
+      clientTransportParams = await client.addTransport(type, audioPid, videoPid)
     }
     ackCb(clientTransportParams)
   });

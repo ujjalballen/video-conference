@@ -30,7 +30,8 @@ const joinRoom = async () => {
 
   await device.load({ routerRtpCapabilities: joinRoomResp.routerRtpCapabilities });
 
-  console.log('all devices', device)
+  // console.log('all devices', device)
+  console.log(joinRoomResp)
 
   // PLACEHOLDER... Start making the transports for current speakers
 

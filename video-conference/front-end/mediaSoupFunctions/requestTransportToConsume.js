@@ -19,7 +19,9 @@ const requestTransportToConsumre = (consumeData, socket, device) => {
     consumeData.audioPidsToCreate.forEach(async(audioPid, index) => {
         const videoPid = consumeData.videoPidsToCreate[index];
         //expact back transport params for THIS Pids, maybe 5 times, maybe 0
-        const consumerTransportParams = await socket.emitWithAck('requestTrasport', {type: 'consume', audioPid})
+        const consumerTransportParams = await socket.emitWithAck('requestTransport', {type: 'consumer', audioPid})
+
+        console.log(consumerTransportParams)
     })
 
 

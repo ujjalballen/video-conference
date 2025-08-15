@@ -22,7 +22,7 @@ class Client {
         this.room = null // it will be a room object
     };
 
-    addTransport(type) {
+    addTransport(type, audioPid = null, videoPid = null) {
         return new Promise(async (resove, reject) => {
             const transport = await this.room.router.createWebRtcTransport({
                 enableUdp: true,
@@ -60,24 +60,33 @@ class Client {
                 this.upstreamTrasport = transport;
 
                 //Testing Connection With getStats
-                setInterval(async () => {
-                    const stats = await this.upstreamTrasport.getStats();
+                // setInterval(async () => {
+                //     const stats = await this.upstreamTrasport.getStats();
 
-                    for (const report of stats.values()) {
-                        console.log(report.type)
+                //     for (const report of stats.values()) {
+                //         console.log(report.type)
 
-                        if (report.type === 'webrtc-transport') {
-                            // console.log(report)
+                //         if (report.type === 'webrtc-transport') {
+                //             // console.log(report)
 
-                            console.log(report.bytesReceived, "...", report.rtpBytesReceived);
+                //             console.log(report.bytesReceived, "...", report.rtpBytesReceived);
 
-                        }
-                    };
+                //         }
+                //     };
 
-                }, 1000)
+                // }, 1000)
 
             } else if (type === "consumer") {
                 // this.downstreamTrasports = transport;
+                // add the new trasport AND the 2 pids, to downstream trasport
+
+                this.downstreamTrasports.push({
+                    transport, // will handle both audio and video
+                    associatedAudioPid: audioPid,
+                    associatedVideoPid: videoPid,
+                    
+                })
+                
             }
 
 
