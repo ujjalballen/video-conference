@@ -15,8 +15,17 @@ class Client {
         // this client trasport for pulling data or geting data
         this.downstreamTrasports = []
 
+        // {
+        //     transport,
+        //     associatedAudioPid,
+        //     associatedVideoPid,
+        //     audio,
+        //     video
+        // }
+
+
         // an array of consumer, each of two parts
-        this.consumer = []
+        // this.consumer = [] // organise the data and put it inside the downstreamTrasports
 
         // this.room = []
         this.room = null // it will be a room object
@@ -84,9 +93,9 @@ class Client {
                     transport, // will handle both audio and video
                     associatedAudioPid: audioPid,
                     associatedVideoPid: videoPid,
-                    
+
                 })
-                
+
             }
 
 
@@ -106,6 +115,11 @@ class Client {
             });
         };
     };
+
+
+    addConsumer(kind, newConsumer, downstreamTrasport) {
+        downstreamTrasport[kind] = newConsumer;
+    }
 
 };
 

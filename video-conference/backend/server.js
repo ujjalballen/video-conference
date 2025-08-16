@@ -181,6 +181,59 @@ io.on('connection', (socket) => {
   })
 
 
+  socket.on('consumeMedia', async ({ rtpCapabilities, pid, kind }, ackCb) => {
+    // will run twice for every peer to consume... once for video, once for audio
+
+    console.log("kind", kind, " pid", pid);
+
+    // we will set up our clientConsumer, and send back the params
+    // use the right transport and add/update the consumer in client confirm canConsume
+
+    try {
+      if (!client.room.router.canConsume({ producerId: pid, rtpCapabilities })) {
+        ackCb('cannotConsume')
+      } else {
+        // we can consume
+        // t mean singel transport
+        const downstreamTrasport = client.downstreamTrasports.find(t => {
+          if (kind === 'audio') {
+            return t.associatedAudioPid === pid;
+          } else if (kind === 'video') {
+            return t.associatedVideoPid === pid;
+          }
+        });
+
+
+        // create the consumer with the transport
+        const newConsumer = await downstreamTrasport.transport.consume({
+          producerId: pid,
+          rtpCapabilities,
+          paused: true // good practice
+        })
+
+        // add this newConsumer to the client
+        client.addConsumer(kind, newConsumer, downstreamTrasport)
+
+        // response with the params
+        const clientParams = {
+          producerId: pid,
+          id: newConsumer.id,
+          kind: newConsumer.kind,
+          rtpParameters: newConsumer.rtpParameters
+        }
+
+        ackCb(clientParams);
+
+      }
+
+    } catch (error) {
+      console.log(error);
+      ackCb('consumeFailed')
+    }
+
+  })
+
+
 });
 
 
