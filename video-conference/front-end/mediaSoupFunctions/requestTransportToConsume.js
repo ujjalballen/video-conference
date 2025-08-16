@@ -1,5 +1,8 @@
 // joinRoomResp = consumeData
 
+import createConsumer from "./createConsumer";
+import createConsumerTransport from "./createConsumerTransport";
+
 const requestTransportToConsumre = (consumeData, socket, device) => {
 // how many transports? one for each cosumer?
 // or one that handles all comsumers?
@@ -21,7 +24,18 @@ const requestTransportToConsumre = (consumeData, socket, device) => {
         //expact back transport params for THIS Pids, maybe 5 times, maybe 0
         const consumerTransportParams = await socket.emitWithAck('requestTransport', {type: 'consumer', audioPid})
 
-        console.log(consumerTransportParams)
+        console.log('consumerTransportParams', consumerTransportParams)
+
+        const consumerTransport = createConsumerTransport(consumerTransportParams, device, socket, audioPid);
+
+        const [audioConsumer, videoConsumer] = await Promise.all([
+            createConsumer(consumerTransport, audioPid, device, socket, 'audio', index),
+            createConsumer(consumerTransport, videoPid, device, socket, 'video', index)
+        ])
+
+
+        console.log('audioConsumer',audioConsumer)
+        console.log('videoConsumer',videoConsumer)
     })
 
 
