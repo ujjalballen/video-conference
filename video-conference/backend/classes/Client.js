@@ -19,8 +19,8 @@ class Client {
         //     transport,
         //     associatedAudioPid,
         //     associatedVideoPid,
-        //     audio,
-        //     video
+        //     audio,  // consumer
+        //     video,  // consumer
         // }
 
 

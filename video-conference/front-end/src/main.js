@@ -12,6 +12,7 @@ let localStream = null;
 let producerTransport = null;
 let videoProducer = null;
 let audioProducer = null;
+let consumers = {}; //key off the audioPid
 
 const socket = io('http://localhost:3031'); // server URL
 socket.on('connect', () => {
@@ -40,7 +41,7 @@ const joinRoom = async () => {
     // map to videoPidsToCreate
     // map to associatedUserNames
   // these array, maybe empty....they may have max of 5 indicies
-  requestTransportToConsumre(joinRoomResp, socket, device);
+  requestTransportToConsumre(joinRoomResp, socket, device, consumers);
 
 
 

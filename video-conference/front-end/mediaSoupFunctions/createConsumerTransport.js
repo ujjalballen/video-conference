@@ -22,7 +22,15 @@ const createConsumerTransport = (consumerTransportParams, device, socket, audioP
         //connect comes with local dtlsParameters, we need
         // to send these up to the server, so we can finish the connection
 
+        const connectResp = await socket.emitWithAck('connectTransport', {dtlsParameters, type: 'consumer', audioPid })
 
+        console.log(connectResp, 'connectResp is Back');
+
+        if(connectResp === 'success'){
+            callback(); // it will finished our wait consume
+        }else{
+            errback()
+        }
     })
 
 

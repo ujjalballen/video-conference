@@ -135,7 +135,7 @@ io.on('connection', (socket) => {
 
 
 
-  socket.on('connectTransport', async ({ dtlsParameters, type }, ackCb) => {
+  socket.on('connectTransport', async ({ dtlsParameters, type, audioPid }, ackCb) => {
     if (type === "producer") {
       try {
         await client.upstreamTrasport.connect({ dtlsParameters });
@@ -146,7 +146,19 @@ io.on('connection', (socket) => {
         ackCb('error')
       }
     } else if (type === "consumer") {
+      // find the right transport
+      // t= transport
+      try {
+        const downstreamTrasport = client.downstreamTrasports.find(t => {
+          return t.associatedAudioPid === audioPid
+        });
 
+        downstreamTrasport.transport.connect({ dtlsParameters });
+        ackCb('success')
+      } catch (error) {
+        console.log(error);
+        ackCb('error')
+      }
     }
   });
 
@@ -178,7 +190,7 @@ io.on('connection', (socket) => {
     } else {
       client?.producer?.audio?.resume()
     }
-  })
+  });
 
 
   socket.on('consumeMedia', async ({ rtpCapabilities, pid, kind }, ackCb) => {
@@ -230,6 +242,24 @@ io.on('connection', (socket) => {
       console.log(error);
       ackCb('consumeFailed')
     }
+
+  });
+
+
+  socket.on('unpauseConsumer', async ({ pid, kind }, ackCb) => {
+    const consumerToResume = client.downstreamTrasports.find(t => {
+      return t?.[kind].producerId === pid
+    })
+
+    // const consumerToResume = client.downstreamTrasports;
+
+    // console.log('WE NEED TO SEE: ', consumerToResume)
+    // console.log('WE NEED TO AUDIO AND VIDEO: ', consumerToResume.audio)
+
+    // ackCb({consumerToResume, pid})
+
+    await consumerToResume[kind].resume()
+    ackCb()
 
   })
 
