@@ -172,9 +172,9 @@ io.on('connection', (socket) => {
       // add the producer to this client object
       client.addProducer(kind, newProducer);
 
-          // PLACEHOLDER 1 - if this is an audiotrack, then this is a new possible speaker 
+      // PLACEHOLDER 1 - if this is an audiotrack, then this is a new possible speaker 
 
-      if(kind === 'audio'){
+      if (kind === 'audio') {
         client.room.activeSpeakerList.push(newProducer.id)
       };
 
@@ -192,7 +192,42 @@ io.on('connection', (socket) => {
 
     const newtransportsByPeer = updateActiveSpeakers(client.room, io);
 
+    // newTransportsByPeer is an object, each propertry is a socket.id 
+    // that has transports to make. they are in an array by pid
+
+    for (const [socketId, audioPidsToCreate] of Object.entries(newtransportsByPeer)) {
+      //we have the audioPidsToCreate this socket nees to create
+      // map the video pids and the username
+
+      const videoPidsToCreate = audioPidsToCreate.map(aPid => {
+        const producerClient = client.room.clients.find((c) => {
+          return c?.producer?.audio?.id === aPid
+        });
+
+        return producerClient?.producer?.video?.id;
+      });
+
+
+      const associatedUserNames = audioPidsToCreate.map(aPid => {
+        const producerClient = client.room.clients.find((c) => {
+          return c?.producer?.audio?.id === aPid
+        });
+
+        return producerClient?.userName;
+      });
+
+      io.to(socketId).emit('newProducersToConsumer', {
+        routerRtpCapabilities: client.room.router.rtpCapabilities,
+        audioPidsToCreate,
+        videoPidsToCreate,
+        associatedUserNames,
+        activeSpeakerList: client.room.activeSpeakerList.slice(0, 5)
+      })
+
+    };
+
   });
+
 
 
   socket.on('audioChange', typeOfChange => {
