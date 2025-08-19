@@ -6,6 +6,7 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const config = require('./config/config');
 const createWorkers = require('./utilities/createWorkers');
+const updateActiveSpeakers = require('./utilities/updateActiveSpeakers');
 const Client = require('./classes/Client');
 const Room = require('./classes/Room');
 const getWorker = require('./utilities/getWorker');
@@ -169,7 +170,13 @@ io.on('connection', (socket) => {
     try {
       const newProducer = await client.upstreamTrasport.produce({ kind, rtpParameters });
       // add the producer to this client object
-      client.addProducer(kind, newProducer)
+      client.addProducer(kind, newProducer);
+
+          // PLACEHOLDER 1 - if this is an audiotrack, then this is a new possible speaker 
+
+      if(kind === 'audio'){
+        client.room.activeSpeakerList.push(newProducer.id)
+      };
 
       // the front end is waiting for the id
       ackCb(newProducer.id);
@@ -179,8 +186,12 @@ io.on('connection', (socket) => {
       ackCb('error')
     }
 
-    // PLACEHOLDER 1 - if this is an audiotrack, then this is a new possible speaker 
     // PLACEHOLDER 1 - if the room populated, then let the connected peers know someone joined
+
+    // run updateActiveSpeakers
+
+    const newtransportsByPeer = updateActiveSpeakers(client.room, io);
+
   });
 
 
