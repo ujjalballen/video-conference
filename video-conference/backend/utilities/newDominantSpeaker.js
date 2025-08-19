@@ -1,3 +1,5 @@
+const updateActiveSpeakers = require("./updateActiveSpeakers");
+
 const newDominantSpeaker = (ds, room, io) => {
     console.log('======ds======', ds.producer.id)
     // look through this room's activeSpeakerList for this producer's pid
@@ -17,6 +19,39 @@ const newDominantSpeaker = (ds, room, io) => {
 
     // updateActiveSpeakers = mute/unmute / get new transports
 
+    const newtransportsByPeer = updateActiveSpeakers(room, io);
+
+
+    for (const [socketId, audioPidsToCreate] of Object.entries(newtransportsByPeer)) {
+        //we have the audioPidsToCreate this socket nees to create
+        // map the video pids and the username
+
+        const videoPidsToCreate = audioPidsToCreate.map(aPid => {
+            const producerClient = room.clients.find((c) => {
+                return c?.producer?.audio?.id === aPid
+            });
+
+            return producerClient?.producer?.video?.id;
+        });
+
+
+        const associatedUserNames = audioPidsToCreate.map(aPid => {
+            const producerClient = room.clients.find((c) => {
+                return c?.producer?.audio?.id === aPid
+            });
+
+            return producerClient?.userName;
+        });
+
+        io.to(socketId).emit('newProducersToConsumer', {
+            routerRtpCapabilities: room.router.rtpCapabilities,
+            audioPidsToCreate,
+            videoPidsToCreate,
+            associatedUserNames,
+            activeSpeakerList: room.activeSpeakerList.slice(0, 5)
+        })
+
+    };
 
 
 };
