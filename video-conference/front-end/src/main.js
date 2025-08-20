@@ -11,7 +11,7 @@ let device = null;
 let localStream = null;
 let producerTransport = null;
 let videoProducer = null;
-let audioProducer = null;
+let audioProducer = null; // THIS client's producer
 let consumers = {}; //key off the audioPid
 
 const socket = io('http://localhost:3031'); // server URL
@@ -21,17 +21,52 @@ socket.on('connect', () => {
 
 
 
-socket.on('updateActiveSpeakers', async(newListOfActives) => {
-console.log('updateActiveSpeakers')
-console.log('updateActiveSpeakers', newListOfActives)
+socket.on('updateActiveSpeakers', async (newListOfActives) => {
+  // console.log('updateActiveSpeakers')
+  // console.log('updateActiveSpeakers', newListOfActives)
+
+  // an array of the most recent 5 dominant speakers. just grab the 1st
+  // and put it in the slot. move everthing else down
+  // consumers is an {} with key of audioId, value of combined feed
+
+
+  console.log(newListOfActives);
+  let slot = 0;
+
+  // remove all videos from video Els
+  const remoteEls = document.getElementsByClassName('remote-video')
+
+  for (let remoteEl of remoteEls) {
+    remoteEl.srcObject = null // clear out the <video> tag
+  }
+
+  newListOfActives.forEach(audioId => {
+    if (audioId !== audioProducer?.id) {
+      // do not show THIS client in a video tag, other than local
+      // put this video in the next available slot
+
+      console.log('audioId', audioId)
+      const remoteVideo = document.getElementById(`remote-video-${slot}`);
+      const remoteVideoUserName = document.getElementById(`username-${slot}`);
+
+      const consumerForThisSlot = consumers[audioId];
+      console.log('consumerForThisSlot', consumerForThisSlot)
+
+      remoteVideo.srcObject = consumerForThisSlot?.combinedStream;
+      remoteVideoUserName.innerHTML = consumerForThisSlot?.userName;
+
+      slot++; // for the next
+    }
+  });
+
 });
 
 
 socket.on('newProducersToConsume', consumeData => {
-// console.log('newProducersToConsume')
-// console.log('newProducersToConsume', consumeData)
+  // console.log('newProducersToConsume')
+  // console.log('newProducersToConsume', consumeData)
 
-requestTransportToConsume(consumeData, socket, device, consumers)
+  requestTransportToConsume(consumeData, socket, device, consumers)
 })
 
 // joinRoom Logic
@@ -52,9 +87,9 @@ const joinRoom = async () => {
   // PLACEHOLDER... Start making the transports for current speakers
 
   // joinRoomResp contains for:
-    // audioPidsToCreate
-    // map to videoPidsToCreate
-    // map to associatedUserNames
+  // audioPidsToCreate
+  // map to videoPidsToCreate
+  // map to associatedUserNames
   // these array, maybe empty....they may have max of 5 indicies
   requestTransportToConsume(joinRoomResp, socket, device, consumers);
 
@@ -68,22 +103,22 @@ const joinRoom = async () => {
 // enableFeed logic
 
 const enableFeed = async () => {
-try {
+  try {
     localStream = await navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true
-  });
+      audio: true,
+      video: true
+    });
 
-  buttons.localMediaLeft.srcObject = localStream;
+    buttons.localMediaLeft.srcObject = localStream;
 
-  // button disabled and endabled
-  buttons.enableFeed.disabled = true;
-  buttons.sendFeed.disabled = false;
-  buttons.muteBtn.disabled = false;
-  
-} catch (error) {
-  console.log(error)
-}
+    // button disabled and endabled
+    buttons.enableFeed.disabled = true;
+    buttons.sendFeed.disabled = false;
+    buttons.muteBtn.disabled = false;
+
+  } catch (error) {
+    console.log(error)
+  }
 };
 
 
@@ -105,26 +140,26 @@ const sendFeed = async () => {
 
 
 const muteAudio = () => {
-// mute at the producer level, to keep the transport, and all
-// other mechanism in place;
-if(audioProducer.paused){
-  // currently paused. user wants to unpause;
-  audioProducer.resume();
-  buttons.muteBtn.innerHTML = 'Audio On';
-  buttons.muteBtn.classList.add('btn-success');
-  buttons.muteBtn.classList.remove('btn-danger');
+  // mute at the producer level, to keep the transport, and all
+  // other mechanism in place;
+  if (audioProducer.paused) {
+    // currently paused. user wants to unpause;
+    audioProducer.resume();
+    buttons.muteBtn.innerHTML = 'Audio On';
+    buttons.muteBtn.classList.add('btn-success');
+    buttons.muteBtn.classList.remove('btn-danger');
 
-  // unpause on the server;
-  socket.emit('audioChange', 'unmute');
-}else{
-  audioProducer.pause();
-  buttons.muteBtn.innerHTML = 'Audio Muted';
-  buttons.muteBtn.classList.remove('btn-success');
-  buttons.muteBtn.classList.add('btn-danger');
+    // unpause on the server;
+    socket.emit('audioChange', 'unmute');
+  } else {
+    audioProducer.pause();
+    buttons.muteBtn.innerHTML = 'Audio Muted';
+    buttons.muteBtn.classList.remove('btn-success');
+    buttons.muteBtn.classList.add('btn-danger');
 
-  // pause/mute on the server;
-  socket.emit("audioChange", "mute")
-}
+    // pause/mute on the server;
+    socket.emit("audioChange", "mute")
+  }
 
 };
 
