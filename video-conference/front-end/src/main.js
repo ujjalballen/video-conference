@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 import buttons from '../uiStuff/uiButtons';
 import createProducerTransport from '../mediaSoupFunctions/createProducerTransport';
 import createProducer from '../mediaSoupFunctions/createProducer';
-import requestTransportToConsumre from '../mediaSoupFunctions/requestTransportToConsume';
+import requestTransportToConsume from '../mediaSoupFunctions/requestTransportToConsume';
 
 
 let device = null;
@@ -18,6 +18,21 @@ const socket = io('http://localhost:3031'); // server URL
 socket.on('connect', () => {
   console.log('socket connected!')
 });
+
+
+
+socket.on('updateActiveSpeakers', async(newListOfActives) => {
+console.log('updateActiveSpeakers')
+console.log('updateActiveSpeakers', newListOfActives)
+});
+
+
+socket.on('newProducersToConsume', consumeData => {
+// console.log('newProducersToConsume')
+// console.log('newProducersToConsume', consumeData)
+
+requestTransportToConsume(consumeData, socket, device, consumers)
+})
 
 // joinRoom Logic
 
@@ -41,7 +56,7 @@ const joinRoom = async () => {
     // map to videoPidsToCreate
     // map to associatedUserNames
   // these array, maybe empty....they may have max of 5 indicies
-  requestTransportToConsumre(joinRoomResp, socket, device, consumers);
+  requestTransportToConsume(joinRoomResp, socket, device, consumers);
 
 
 

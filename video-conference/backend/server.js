@@ -216,7 +216,7 @@ io.on('connection', (socket) => {
         return producerClient?.userName;
       });
 
-      io.to(socketId).emit('newProducersToConsumer', {
+      io.to(socketId).emit('newProducersToConsume', {
         routerRtpCapabilities: client.room.router.rtpCapabilities,
         audioPidsToCreate,
         videoPidsToCreate,
