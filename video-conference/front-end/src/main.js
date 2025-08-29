@@ -36,24 +36,26 @@ socket.on('updateActiveSpeakers', async (newListOfActives) => {
   // remove all videos from video Els
   const remoteEls = document.getElementsByClassName('remote-video')
 
-  for (let remoteEl of remoteEls) {
-    remoteEl.srcObject = null // clear out the <video> tag
+  for (let el of remoteEls) {
+    el.srcObject = null // clear out the <video> tag
   }
 
-  newListOfActives.forEach(audioId => {
-    if (audioId !== audioProducer?.id) {
+  newListOfActives.forEach(aid => {
+    if (aid !== audioProducer?.id) {
       // do not show THIS client in a video tag, other than local
       // put this video in the next available slot
 
-      console.log('audioId', audioId)
       const remoteVideo = document.getElementById(`remote-video-${slot}`);
       const remoteVideoUserName = document.getElementById(`username-${slot}`);
 
-      const consumerForThisSlot = consumers[audioId];
+      const consumerForThisSlot = consumers[aid];
       console.log('consumerForThisSlot', consumerForThisSlot)
+
+   
 
       remoteVideo.srcObject = consumerForThisSlot?.combinedStream;
       remoteVideoUserName.innerHTML = consumerForThisSlot?.userName;
+
 
       slot++; // for the next
     }
