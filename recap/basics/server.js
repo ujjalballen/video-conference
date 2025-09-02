@@ -36,13 +36,26 @@ let router = null;
 const initMediaSoup = async () => {
     workers = await createWorkers();
 
-    router = await workers[0].createRouter({mediaCodecs: mediasoupConfig.routerMediaCodecs})
+    router = await workers[0].createRouter({ mediaCodecs: mediasoupConfig.routerMediaCodecs })
 
 };
 
 initMediaSoup(); // build our mediasoup server/sfu
 
 
+
+io.on('connection', (socket) => {
+    console.log('socket ID: ', socket.id)
+
+    //RTPCap = RtpCapabilities
+
+    socket.on('getRTPCap', (cb) => {
+
+        //cb is a callback to run, that will send the args, 
+        // back to the client
+        cb(router.rtpCapabilities)
+    })
+})
 
 
 
