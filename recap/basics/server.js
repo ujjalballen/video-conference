@@ -5,7 +5,8 @@ import express from 'express';
 const app = express();
 import { Server } from "socket.io";
 import mediasoup from 'mediasoup';
-import createWorkers from './createWorkers.js';
+import { createWorkers, getWorker } from './createWorkers.js';
+import mediasoupConfig from './mediasoupConfig/mediasoupConfig.js';
 const port = 3000;
 
 
@@ -27,16 +28,19 @@ const io = new Server(httpsServer, {
 })
 
 // it's where our mediasoup workers will live(probably one, because we used null, instead [])
-let worker = null
+let workers = null
+
+let router = null;
 
 // initMediaSoup gets mediasoup ready to do things
 const initMediaSoup = async () => {
-    worker = await createWorkers();
-    // console.log(worker)
+    workers = await createWorkers();
+
+    router = await workers[0].createRouter({mediaCodecs: mediasoupConfig.routerMediaCodecs})
+
 };
 
 initMediaSoup(); // build our mediasoup server/sfu
-
 
 
 

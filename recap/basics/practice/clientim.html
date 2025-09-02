@@ -1,0 +1,69 @@
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script type="module">
+  import { Device } from 'https://cdn.skypack.dev/mediasoup-client';
+
+  const socket = io('http://localhost:3001');
+  const roomId = 'voice-room-1';
+  let device, sendTransport, recvTransport;
+
+  function emitAsync(event, data) {
+    return new Promise(res => socket.emit(event, data, res));
+  }
+
+  async function start() {
+    const joinRes = await emitAsync('join', { roomId, name: 'Me' });
+    device = new Device();
+    await device.load({ routerRtpCapabilities: joinRes.routerRtpCapabilities });
+
+    // Send transport
+    const sendParams = await emitAsync('createTransport', { roomId, direction: 'send' });
+    sendTransport = device.createSendTransport(sendParams);
+    sendTransport.on('connect', ({ dtlsParameters }, cb) => {
+      socket.emit('connectTransport', { roomId, transportId: sendTransport.id, dtlsParameters }, cb);
+    });
+    sendTransport.on('produce', ({ kind, rtpParameters }, cb) => {
+      socket.emit('produce', { roomId, transportId: sendTransport.id, kind, rtpParameters }, cb);
+    });
+
+    // Get mic and produce
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    await sendTransport.produce({
+      track: stream.getAudioTracks()[0],
+      codecOptions: { opusDtx: true }
+    });
+
+    // Recv transport
+    const recvParams = await emitAsync('createTransport', { roomId, direction: 'recv' });
+    recvTransport = device.createRecvTransport(recvParams);
+    recvTransport.on('connect', ({ dtlsParameters }, cb) => {
+      socket.emit('connectTransport', { roomId, transportId: recvTransport.id, dtlsParameters }, cb);
+    });
+
+    // Consume existing producers
+    socket.on('existingProducers', (list) => list.forEach(p => consumeFrom(p.producerId)));
+    // Consume new producers
+    socket.on('newProducer', ({ producerId }) => consumeFrom(producerId));
+  }
+
+  async function consumeFrom(producerId) {
+    const { id, kind, rtpParameters, producerPaused, error } =
+      await emitAsync('consume', {
+        roomId,
+        transportId: recvTransport.id,
+        producerId,
+        rtpCapabilities: device.rtpCapabilities
+      });
+    if (error) return console.warn(error);
+
+    const consumer = await recvTransport.consume({ id, producerId, kind, rtpParameters });
+    const audio = document.createElement('audio');
+    audio.srcObject = new MediaStream([consumer.track]);
+    audio.autoplay = true;
+    audio.playsInline = true;
+    document.body.appendChild(audio);
+
+    await emitAsync('resumeConsumer', { roomId, consumerId: id });
+  }
+
+  start();
+</script>
