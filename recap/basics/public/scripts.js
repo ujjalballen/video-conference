@@ -1,6 +1,9 @@
 
 let socket = null;
 let device = null;
+let localStream = null;
+let producerTransport = null;
+
 
 
 const initConnect = () => {
@@ -38,6 +41,9 @@ const deviceSetup = async () => {
         // console.log("Device created:", device);
         // console.log(device.loaded)
 
+        deviceButton.disabled = true;
+        createProdButton.disabled = false;
+
     } catch (err) {
         if (err.name === "UnsupportedError") {
             console.warn("Browser not supported");
@@ -45,6 +51,29 @@ const deviceSetup = async () => {
             console.error("Error creating Device:", err);
         }
     }
+};
+
+
+const createProducer = async () => {
+    // console.log('create producer')
+
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+        });
+
+        localVideo.srcObject = localStream;
+
+
+    } catch (error) {
+        console.log('Get User media error: ', error)
+    }
+
+    // ask the socket.io server(signaling) for transport infomation
+    const data = await socket.emitWithAck('create-producer-transport');
+    console.log(data)
+
 };
 
 
