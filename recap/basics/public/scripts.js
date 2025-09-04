@@ -72,7 +72,7 @@ const createProducer = async () => {
 
     // ask the socket.io server(signaling) for transport infomation
     const data = await socket.emitWithAck('create-producer-transport');
-    console.log(data)
+    console.log('thisClientProducerTransport: ', data)
 
 };
 
