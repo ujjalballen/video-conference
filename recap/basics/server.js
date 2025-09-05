@@ -95,8 +95,10 @@ io.on('connection', (socket) => {
             id: thisClientProducerTransport?.id,
             iceParameters: thisClientProducerTransport?.iceParameters,
             iceCandidates: thisClientProducerTransport?.iceCandidates,
-            dtlsParameters: thisClientProducerTransport.dtlsParameters,
+            dtlsParameters: thisClientProducerTransport?.dtlsParameters,
+            
         }
+
 
         ack(clientTransportParams) // what we send back to the client
     })

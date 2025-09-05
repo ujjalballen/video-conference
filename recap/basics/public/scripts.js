@@ -72,7 +72,41 @@ const createProducer = async () => {
 
     // ask the socket.io server(signaling) for transport infomation
     const data = await socket.emitWithAck('create-producer-transport');
-    console.log('thisClientProducerTransport: ', data)
+
+    // console.log('thisClientProducerTransport: ', data)
+
+
+    const { id, iceParameters, iceCandidates, dtlsParameters } = data;
+
+
+    // make a transport on the client(producer= who will send the media stream);
+
+    const transport = device.createSendTransport(
+        {
+            id,
+            iceParameters,
+            iceCandidates,
+            dtlsParameters
+        }
+    );
+
+
+    producerTransport = transport;
+
+
+    // transport = producerTransport
+
+    // the transport connect event will not run until,
+    // call transport.producer();
+    producerTransport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+        console.log("Transport connect event has fired!");
+    });
+
+    producerTransport.on("produce", async(parameters, callback, errback) => {
+        console.log("Transport produce event has fired!");
+
+    });
+
 
 };
 
