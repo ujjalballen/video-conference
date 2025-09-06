@@ -3,6 +3,7 @@ let socket = null;
 let device = null;
 let localStream = null;
 let producerTransport = null;
+let producer = null;
 
 
 
@@ -102,13 +103,28 @@ const createProducer = async () => {
         console.log("Transport connect event has fired!");
     });
 
-    producerTransport.on("produce", async(parameters, callback, errback) => {
+    producerTransport.on("produce", async (parameters, callback, errback) => {
         console.log("Transport produce event has fired!");
 
     });
 
 
+    createProdButton.disabled = true;
+    publishButton.disabled = false;
+
+
 };
+
+const publish = async () => {
+    // console.log('asdkjfasdkj')
+    // there will be more then one track, just for now we grab only one;
+    const track = localStream.getVideoTracks()[0];
+
+    const producer = await producerTransport.produce({
+        track
+    })
+
+}
 
 
 
