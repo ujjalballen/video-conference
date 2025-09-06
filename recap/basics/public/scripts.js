@@ -100,7 +100,29 @@ const createProducer = async () => {
     // the transport connect event will not run until,
     // call transport.producer();
     producerTransport.on("connect", async ({ dtlsParameters }, callback, errback) => {
-        console.log("Transport connect event has fired!");
+        // console.log("Transport connect event has fired!");
+        // connect comees with local dtlsParameters. We need
+        // to send these up to the server, so we can finish the connection
+        // console.log('dtlsParameters: ', dtlsParameters)
+
+        try {
+            const resp = await socket.emitWithAck('connect-transport', { dtlsParameters })
+            console.log(resp)
+            if (resp === 'success') {
+                // calling callback simple lets the app know, the server
+                // succeeded in connecting, so trigger the produce event
+                callback();
+            } else if (resp === 'error') {
+                // calling errback simple let the app know the server
+                // failed in connecting, so HALT everything
+                errback()
+            }
+
+        } catch (error) {
+            console.error("Transport connect error (client):", error);
+            errback()
+        }
+
     });
 
     producerTransport.on("produce", async (parameters, callback, errback) => {
@@ -120,6 +142,7 @@ const publish = async () => {
     // there will be more then one track, just for now we grab only one;
     const track = localStream.getVideoTracks()[0];
 
+    // When this fires, the transport.on('connect') event will run
     const producer = await producerTransport.produce({
         track
     })

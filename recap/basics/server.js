@@ -96,12 +96,33 @@ io.on('connection', (socket) => {
             iceParameters: thisClientProducerTransport?.iceParameters,
             iceCandidates: thisClientProducerTransport?.iceCandidates,
             dtlsParameters: thisClientProducerTransport?.dtlsParameters,
-            
+
         }
 
 
         ack(clientTransportParams) // what we send back to the client
-    })
+    });
+
+
+    // connect-transport mean producerTransport connect event
+    socket.on('connect-transport', async (dtlsParameters, ack) => {
+        // get the dtlsParameters from the client and finish the connection
+
+        try {
+
+            // there thisCLientProducerTransport mean webRtcTransport
+            // (which we already created using createWebRtcTransport)
+            await thisClientProducerTransport.connect(dtlsParameters);
+            ack('success');
+
+        } catch (error) {
+            console.log(error)
+            ack('error')
+        }
+    });
+
+
+
 })
 
 
