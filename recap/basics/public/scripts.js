@@ -98,10 +98,10 @@ const createProducer = async () => {
     // transport = producerTransport
 
     // the transport connect event will not run until,
-    // call transport.producer();
+    // call transport.produce();
     producerTransport.on("connect", async ({ dtlsParameters }, callback, errback) => {
         // console.log("Transport connect event has fired!");
-        // connect comees with local dtlsParameters. We need
+        // connect comes with local dtlsParameters. We need
         // to send these up to the server, so we can finish the connection
         // console.log('dtlsParameters: ', dtlsParameters)
 
@@ -127,6 +127,30 @@ const createProducer = async () => {
 
     producerTransport.on("produce", async (parameters, callback, errback) => {
         console.log("Transport produce event has fired!");
+        console.log('producerTransport produce event: ', parameters)
+        try {
+
+            const { kind, rtpParameters } = parameters;
+
+            const resp = await socket.emitWithAck('start-producing', { kind, rtpParameters })
+            console.log(resp)
+
+
+            if (resp === 'error') {
+                errback();
+            } else {
+                callback({ id: resp })
+            }
+
+
+            publishButton.disabled = true;
+            createConsButton.disabled = false;
+
+
+        } catch (error) {
+            console.log('Transport produce error: ', error)
+            errback();
+        }
 
     });
 

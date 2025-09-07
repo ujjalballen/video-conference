@@ -51,6 +51,7 @@ io.on('connection', (socket) => {
     console.log('socket ID: ', socket.id)
 
     let thisClientProducerTransport = null;
+    let thisClientProducer = null;
 
 
 
@@ -120,6 +121,19 @@ io.on('connection', (socket) => {
             ack('error')
         }
     });
+
+
+
+    socket.on('start-producing', async ({ kind, rtpParameters }, ack) => {
+        try {
+
+            thisClientProducer = await thisClientProducerTransport.produce({ kind, rtpParameters });
+            ack(thisClientProducer.id)
+        } catch (error) {
+            console.log(error);
+            ack('error')
+        }
+    })
 
 
 
