@@ -4,7 +4,8 @@ let device = null;
 let localStream = null;
 let producerTransport = null;
 let producer = null;
-
+let consumerTransport = null;
+let consumer = null;
 
 
 const initConnect = () => {
@@ -167,11 +168,63 @@ const publish = async () => {
     const track = localStream.getVideoTracks()[0];
 
     // When this fires, the transport.on('connect') event will run
-    const producer = await producerTransport.produce({
+    producer = await producerTransport.produce({
         track
     })
 
-}
+};
+
+
+// Consume stuff start from here
+const createConsumer = async () => {
+    const data = await socket.emitWithAck('create-consumer-transport');
+    // console.log("consumer transport webrtc: ", data)
+
+    const { id, iceParameters, iceCandidates, dtlsParameters } = data;
+
+    const transport = device.createRecvTransport({
+        id,
+        iceParameters,
+        iceCandidates,
+        dtlsParameters
+    });
+
+    consumerTransport = transport;
+
+
+    // the transport connect event will not run until,
+    // call transport.consume();
+    consumerTransport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+        // console.log("Transport connect event has fired!");
+        // connect comes with local dtlsParameters. We need
+        // to send these up to the server, so we can finish the connection
+        console.log('dtlsParameters: ', dtlsParameters)
+
+        try {
+            const resp = await socket.emitWithAck('connect-consumer-transport', { dtlsParameters })
+            console.log(resp)
+            if (resp === 'success') {
+                // calling callback simple lets the app know, the server
+                // succeeded in connecting, so trigger the consume event
+                callback();
+            } else if (resp === 'error') {
+                // calling errback simple let the app know the server
+                // failed in connecting, so HALT everything
+                errback()
+            }
+
+        } catch (error) {
+            console.error("Transport connect error (client):", error);
+            errback()
+        }
+
+    });
+
+
+    createConsButton.disabled = true;
+    consumeButton.disabled = false;
+
+};
 
 
 

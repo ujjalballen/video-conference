@@ -7,6 +7,7 @@ import { Server } from "socket.io";
 import mediasoup from 'mediasoup';
 import { createWorkers, getWorker } from './createWorkers.js';
 import mediasoupConfig from './mediasoupConfig/mediasoupConfig.js';
+import createWebRtcTransportBothkind from './createWebRtcTransportBothkind.js';
 const port = 3000;
 
 
@@ -52,6 +53,8 @@ io.on('connection', (socket) => {
 
     let thisClientProducerTransport = null;
     let thisClientProducer = null;
+    let thisClientConsumerTransport = null;
+    let thisClientConsumer = null;
 
 
 
@@ -66,42 +69,11 @@ io.on('connection', (socket) => {
 
     socket.on('create-producer-transport', async (ack) => {
 
-        //create a transport / A producer transport;
-        thisClientProducerTransport = await router.createWebRtcTransport({
-            enableUdp: true,
-            enableTcp: true, // used used UDP, unless we can't;
-            preferUdp: true,
-            listenInfos: [
-                {
-                    protocol: "udp",
-                    ip: "0.0.0.0", // we can used 127.0.0.1 AND 192.168.0.111 for local test
-                    // announcedAddress: "203.0.113.45" // your server’s public IP or domain
+        const { transport, params } = await createWebRtcTransportBothkind(router)
 
-                },
-                {
-                    protocol: "tcp",
-                    ip: "0.0.0.0", // we can used 127.0.0.1 AND 192.168.0.111 for local test
-                    // announcedAddress: "203.0.113.45" // your server’s public IP or domain
+        thisClientProducerTransport = transport;
 
-                }
-            ]
-        });
-
-        // const {id, iceParameters, iceCandidates, dtlsParameters} = thisClientProducerTransport;
-        // console.log(id)
-        // console.log(iceParameters)
-        // console.log(iceCandidates)
-
-        const clientTransportParams = {
-            id: thisClientProducerTransport?.id,
-            iceParameters: thisClientProducerTransport?.iceParameters,
-            iceCandidates: thisClientProducerTransport?.iceCandidates,
-            dtlsParameters: thisClientProducerTransport?.dtlsParameters,
-
-        }
-
-
-        ack(clientTransportParams) // what we send back to the client
+        ack(params) // what we send back to the client
     });
 
 
@@ -133,7 +105,34 @@ io.on('connection', (socket) => {
             console.log(error);
             ack('error')
         }
+    });
+
+
+
+    // Consumer stuff
+
+    socket.on('create-consumer-transport', async (ack) => {
+        const { transport, params } = await createWebRtcTransportBothkind(router);
+
+        thisClientConsumerTransport = transport;
+
+        ack(params)
+    });
+
+
+
+    socket.on('connect-consumer-transport', async (dtlsParameters, ack) => {
+        try {
+
+            await thisClientConsumerTransport.connect(dtlsParameters)
+            ack('success')
+        } catch (error) {
+            ack('error')
+        }
+
     })
+
+
 
 
 
