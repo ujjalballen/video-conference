@@ -130,7 +130,48 @@ io.on('connection', (socket) => {
             ack('error')
         }
 
+    });
+
+
+
+    socket.on('consume-media', async({rtpCapabilities}, ack) => {
+        // console.log(rtpCapabilities)
+        // we will set up our clientConsumer, and send back
+        // the params the client needs to do the same
+        // make sure there is a producer:) we can't consume without that one
+
+        if(!thisClientProducer){
+            ack('noProducer')
+        }else if(!router.canConsume({producerId: thisClientProducer.id, rtpCapabilities})){
+            ack('canNotConsume')
+        }else{
+            // we can consume... there is a producer and client is able proceed!
+
+            thisClientConsumer = await thisClientConsumerTransport.consume({
+                producerId: thisClientProducer.id,
+                rtpCapabilities,
+                paused: true, // see docs, this is usuall the best way to start
+            });
+
+
+            const consumerParams = {
+                producerId: thisClientProducer.id,
+                id: thisClientConsumer.id,
+                kind: thisClientConsumer.kind,
+                rtpParameters: thisClientConsumer.rtpParameters
+            }
+
+            ack(consumerParams)
+
+        }
+
+    });
+
+
+    socket.on("unpauseConsumer", async(ack) => {
+        await thisClientConsumer.resume()
     })
+
 
 
 

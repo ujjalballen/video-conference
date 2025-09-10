@@ -228,6 +228,38 @@ const createConsumer = async () => {
 
 
 
+const consume = async() => {
+    //emit consure-media event. this will get us back the
+    //"stuff" that we need to make a consumer, and get the video track
+console.log("Device cap:", device);
+    const consumerParams = await socket.emitWithAck('consume-media', {rtpCapabilities: device.rtpCapabilities})
+
+    if(consumerParams === 'noProducer'){
+        console.log('There is no producer set up to consume')
+    } else if(consumerParams === 'canNotConsume'){
+        console.log('rtpCapabilities faild. can not consume')
+    } else {
+        // set up our consumer! and add the video to the video tag
+
+        // console.log('consumerParams', consumerParams)
+
+        consumer = await consumerTransport.consume(consumerParams);
+        // // in the doc.. consumer.track; for get the track we can distructer
+
+        const {track} = consumer;
+        console.log(track)
+
+        // //see MDN on MediaStream for a ton of info..
+        remoteVideo.srcObject = new MediaStream([track]);
+
+        console.log('track is ready.. we need unpause')
+
+        await socket.emitWithAck('unpauseConsumer')
+    }
+}
+
+
+
 // this socket.on('connect) is only for client connect
 function addSocketListener() {
     socket.on('connect', () => {
